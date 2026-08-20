@@ -259,7 +259,7 @@
             </div>
 
             <!-- 30 天可用率方块 -->
-            <div class="flex items-center gap-[3px] h-11 sm:h-12">
+            <div class="-mx-3 sm:-mx-4 flex items-center gap-[2px] h-12 sm:h-14">
               <div
                 v-for="(day, dayIndex) in getTimelineDays(monitor)"
                 :key="dayIndex"
