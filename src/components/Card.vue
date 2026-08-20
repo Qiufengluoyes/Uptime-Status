@@ -7,7 +7,7 @@
       <div class="h-10 w-28 sm:w-32 rounded-lg bg-gray-200/70 dark:bg-gray-800/60 animate-pulse" />
       <div class="h-10 w-28 sm:w-32 rounded-lg bg-gray-200/70 dark:bg-gray-800/60 animate-pulse" />
     </div>
-    <div class="grid gap-6 grid-cols-1">
+    <div class="grid gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
       <div
         v-for="i in 6"
         :key="i"
@@ -145,7 +145,7 @@
     </div>
 
     <!-- 卡片网格 -->
-    <div v-else class="grid gap-6 grid-cols-1">
+    <div v-else class="grid gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
       <div v-for="(monitor, index) in visibleMonitors"
            :key="monitor.id"
            class="card-base animated-border p-6 rounded-2xl backdrop-blur-sm animate-fade"
@@ -201,7 +201,7 @@
         <!-- 卡片主体：统计数据和图表 -->
         <div class="space-y-4">
           <!-- 响应时间和运行时间统计卡片 -->
-          <div class="grid grid-cols-1 gap-3 sm:gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div class="inner-card relative p-3 sm:p-4 min-w-0">
               <button
                 type="button"
@@ -263,11 +263,11 @@
             </div>
 
             <!-- 30 天可用率方块 -->
-            <div class="flex items-center justify-center gap-[2px] sm:gap-[3px] h-12 sm:h-14">
+            <div class="flex items-center gap-[2px] sm:gap-[3px] h-11 sm:h-12">
               <div
                 v-for="(day, dayIndex) in getTimelineDays(monitor)"
                 :key="dayIndex"
-                class="relative flex-1 min-w-0 max-w-4 aspect-square max-h-full rounded-[3px] transition-transform duration-150 hover:scale-125 hover:z-10"
+                class="relative flex-1 min-w-0 max-w-3 aspect-square max-h-full rounded-[3px] transition-transform duration-150 hover:scale-125 hover:z-10"
                 :style="{ backgroundColor: getTimelineDayColor(day) }"
                 @mouseenter="showTimelineTooltip($event, day, monitor)"
                 @mouseleave="hideTimelineTooltip"
