@@ -259,14 +259,20 @@
             </div>
 
             <!-- 30 天可用率方块 -->
-            <div class="flex items-stretch gap-[3px] h-11 sm:h-12">
+            <div class="flex items-center gap-[3px] h-11 sm:h-12">
               <div
                 v-for="(day, dayIndex) in getTimelineDays(monitor)"
                 :key="dayIndex"
-                class="flex-1 min-w-0 h-full rounded-[3px] transition-transform duration-150 hover:scale-125 hover:z-10"
+                class="group relative flex-1 min-w-0 aspect-square max-h-full rounded-[3px] transition-transform duration-150 hover:scale-125 hover:z-10"
                 :style="{ backgroundColor: getTimelineDayColor(day) }"
-                :title="getTimelineDayTitle(day, monitor)"
-              ></div>
+              >
+                <!-- 自定义浮窗：鼠标移入立即显示，不需要等浏览器原生提示 -->
+                <div
+                  class="pointer-events-none absolute bottom-full left-1/2 z-30 mb-1.5 hidden -translate-x-1/2 rounded-md bg-gray-900/95 px-2 py-1 text-xs whitespace-nowrap text-white shadow-lg group-hover:block dark:bg-gray-950/95"
+                >
+                  {{ getTimelineDayTitle(day, monitor) }}
+                </div>
+              </div>
             </div>
             <div class="flex justify-between text-xs text-gray-400 mt-2">
               <span>30天前</span>
