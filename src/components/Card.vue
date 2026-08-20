@@ -1,11 +1,42 @@
 <template>
-  <!-- 加载状态和错误提示 -->
-  <div v-if="!monitors?.length" class="flex items-center justify-center p-12">
-    <Icon v-if="!error"
-      icon="svg-spinners:180-ring-with-bg"
-      class="w-12 h-12 text-gray-400 dark:text-gray-300 animate-spin"
-      aria-hidden="true"
-    />
+  <!-- 骨架屏：先把 UI 框架显示出来 -->
+  <div v-if="loading && !monitors?.length" class="space-y-6">
+    <div class="h-12 rounded-xl bg-gray-200/70 dark:bg-gray-800/60 animate-pulse" />
+    <div class="flex flex-col sm:flex-row gap-3">
+      <div class="h-10 flex-1 min-w-[200px] rounded-lg bg-gray-200/70 dark:bg-gray-800/60 animate-pulse" />
+      <div class="h-10 w-28 sm:w-32 rounded-lg bg-gray-200/70 dark:bg-gray-800/60 animate-pulse" />
+      <div class="h-10 w-28 sm:w-32 rounded-lg bg-gray-200/70 dark:bg-gray-800/60 animate-pulse" />
+    </div>
+    <div class="grid gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+      <div
+        v-for="i in 6"
+        :key="i"
+        class="card-base p-6 rounded-2xl animate-pulse"
+      >
+        <div class="flex items-center justify-between gap-4 mb-6">
+          <div class="h-5 w-36 sm:w-44 bg-gray-200 dark:bg-gray-700 rounded" />
+          <div class="h-8 w-20 bg-gray-200 dark:bg-gray-700 rounded-full" />
+        </div>
+        <div class="grid grid-cols-2 gap-3 mb-4">
+          <div class="h-20 rounded-lg bg-gray-200 dark:bg-gray-700" />
+          <div class="h-20 rounded-lg bg-gray-200 dark:bg-gray-700" />
+        </div>
+        <div class="h-24 rounded-lg bg-gray-200 dark:bg-gray-700" />
+      </div>
+    </div>
+  </div>
+
+  <!-- 加载失败 / 暂无数据 -->
+  <div v-else-if="!monitors?.length" class="flex items-center justify-center p-12">
+    <div v-if="!error"
+         class="flex flex-col items-center gap-3 text-gray-400 dark:text-gray-500">
+      <Icon
+        icon="carbon:data-vis-4"
+        class="w-12 h-12"
+        aria-hidden="true"
+      />
+      <p class="text-sm">暂无监控数据</p>
+    </div>
     <div v-else
          class="flex flex-col items-center gap-4 p-8 rounded-2xl
            bg-red-50/50 dark:bg-red-900/20
@@ -111,10 +142,11 @@
 
     <!-- 卡片网格 -->
     <div v-else class="grid gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-      <div v-for="monitor in visibleMonitors"
+      <div v-for="(monitor, index) in visibleMonitors"
            :key="monitor.id"
            class="card-base animated-border p-6 rounded-2xl backdrop-blur-sm animate-fade"
            :class="getCardBorderClass(monitor.status)"
+           :style="{ animationDelay: `${Math.min(index, 12) * 60}ms` }"
            @mouseenter="$event.currentTarget.classList.add('hovered')"
       >
         <!-- 卡片头部：标题和状态指示器 -->
@@ -165,8 +197,8 @@
         <!-- 卡片主体：统计数据和图表 -->
         <div class="space-y-4">
           <!-- 响应时间和运行时间统计卡片 -->
-          <div class="grid grid-cols-2 gap-4">
-            <div class="inner-card relative">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <div class="inner-card relative p-3 sm:p-4 min-w-0">
               <button
                 type="button"
                 :aria-label="`查看 ${monitor.friendly_name} 的响应时间趋势`"
@@ -189,7 +221,7 @@
                 最近24小时
               </div>
             </div>
-            <div class="inner-card">
+            <div class="inner-card p-3 sm:p-4 min-w-0">
               <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">平均运行时间</div>
               <div class="text-xl font-bold text-gray-900 dark:text-gray-100">
                 {{ formatters.uptime(monitor.stats?.uptime) }}
@@ -451,7 +483,11 @@ ChartJS.register(
 
 const props = defineProps({
   monitors: Array,
-  error: String
+  error: String,
+  loading: {
+    type: Boolean,
+    default: false
+  }
 })
 
 /**

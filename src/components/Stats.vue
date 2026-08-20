@@ -1,5 +1,24 @@
 <template>
-  <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 lg:gap-5 mb-6">
+  <!-- 加载骨架屏：先渲染 UI 框架，数据到了再显示真实统计 -->
+  <div v-if="loading && !monitors.length" class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 lg:gap-5 mb-6">
+    <div
+      v-for="i in 5"
+      :key="i"
+      class="card-base p-4 sm:p-5 animate-pulse"
+    >
+      <div class="flex items-center justify-between gap-3">
+        <div class="flex-1 space-y-2.5">
+          <div class="h-3 w-14 bg-gray-200 dark:bg-gray-700 rounded" />
+          <div class="h-6 w-20 bg-gray-200 dark:bg-gray-700 rounded" />
+          <div class="h-3 w-24 bg-gray-200 dark:bg-gray-700 rounded" />
+        </div>
+        <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-gray-200 dark:bg-gray-700 shrink-0" />
+      </div>
+    </div>
+  </div>
+
+  <!-- 统计卡片 -->
+  <div v-else class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 lg:gap-5 mb-6">
     <div
       v-for="(item, index) in overviewItems"
       :key="index"
@@ -40,6 +59,10 @@ const props = defineProps({
   monitors: {
     type: Array,
     default: () => []
+  },
+  loading: {
+    type: Boolean,
+    default: false
   }
 })
 

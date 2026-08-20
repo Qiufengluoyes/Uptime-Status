@@ -13,7 +13,7 @@
           @toggle-theme="toggleTheme"
         />
 
-        <Stats :monitors="monitors" />
+        <Stats :monitors="monitors" :loading="initialLoading" />
 
         <!-- 后台刷新失败但仍有旧数据时的提示 -->
         <Transition
@@ -48,6 +48,7 @@
         <Card
           :monitors="monitors"
           :error="errorMessage"
+          :loading="initialLoading"
         />
       </main>
     </div>
@@ -70,6 +71,7 @@ const isRefreshing = ref(false)
 const errorMessage = ref('')
 const noticeMessage = ref('')
 const lastUpdated = ref(null)
+const initialLoading = ref(true)
 
 /**
  * 主题模式：light / dark / system
@@ -175,6 +177,7 @@ const refreshData = async () => {
     }
   } finally {
     isRefreshing.value = false
+    initialLoading.value = false
   }
 }
 
