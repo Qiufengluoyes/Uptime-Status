@@ -79,7 +79,7 @@ const initialLoading = ref(true)
  */
 let storedMode = 'system'
 try {
-  storedMode = localStorage.getItem('theme-mode') || localStorage.getItem('theme') || 'system'
+  storedMode = localStorage.getItem('theme-mode') || 'system'
 } catch (e) {
   storedMode = 'system'
 }

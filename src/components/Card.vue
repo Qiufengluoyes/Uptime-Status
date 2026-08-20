@@ -585,13 +585,13 @@ const getStatusConfig = (status) => STATUS_CONFIG[status] || FALLBACK_STATUS
  * 卡片边框颜色静态映射（避免动态拼接 Tailwind 类）
  */
 const CARD_BORDER_CLASSES = {
-  2: 'hover:border-green-500/50 dark:hover:border-green-400/50',
-  0: 'hover:border-yellow-500/50 dark:hover:border-yellow-400/50',
-  1: 'hover:border-yellow-500/50 dark:hover:border-yellow-400/50',
-  9: 'hover:border-red-500/50 dark:hover:border-red-400/50'
+  2: 'hover:border-green-500/70 hover:ring-2 hover:ring-green-500/40 dark:hover:border-green-400/70 dark:hover:ring-green-400/40',
+  0: 'hover:border-yellow-500/70 hover:ring-2 hover:ring-yellow-500/40 dark:hover:border-yellow-400/70 dark:hover:ring-yellow-400/40',
+  1: 'hover:border-yellow-500/70 hover:ring-2 hover:ring-yellow-500/40 dark:hover:border-yellow-400/70 dark:hover:ring-yellow-400/40',
+  9: 'hover:border-red-500/70 hover:ring-2 hover:ring-red-500/40 dark:hover:border-red-400/70 dark:hover:ring-red-400/40'
 }
 
-const getCardBorderClass = (status) => CARD_BORDER_CLASSES[status] || 'hover:border-gray-500/50 dark:hover:border-gray-400/50'
+const getCardBorderClass = (status) => CARD_BORDER_CLASSES[status] || 'hover:border-gray-500/70 hover:ring-2 hover:ring-gray-500/40 dark:hover:border-gray-400/70 dark:hover:ring-gray-400/40'
 
 /**
  * 排序后的监控列表

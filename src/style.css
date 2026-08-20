@@ -41,6 +41,7 @@
   .card-base {
     @apply p-4 rounded-2xl bg-white dark:bg-gray-800/50
       border border-gray-200/60 dark:border-gray-700/60
+      ring-1 ring-transparent
       transition-all duration-300;
   }
   .inner-card {

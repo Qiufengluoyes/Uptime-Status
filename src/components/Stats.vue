@@ -109,7 +109,7 @@ const overviewItems = computed(() => [
     desc: '全部网站',
     icon: 'bi:check-circle',
     iconColor: 'text-emerald-500',
-    containerClass: 'hover:border-emerald-500/50 dark:hover:border-emerald-400/50'
+    containerClass: 'hover:border-emerald-500/70 hover:ring-2 hover:ring-emerald-500/40 dark:hover:border-emerald-400/70 dark:hover:ring-emerald-400/40'
   },
   {
     label: '正常网站',
@@ -117,7 +117,7 @@ const overviewItems = computed(() => [
     desc: '访问正常',
     icon: 'bi:check-circle-fill',
     iconColor: 'text-green-500',
-    containerClass: 'hover:border-green-500/50 dark:hover:border-green-400/50'
+    containerClass: 'hover:border-green-500/70 hover:ring-2 hover:ring-green-500/40 dark:hover:border-green-400/70 dark:hover:ring-green-400/40'
   },
   {
     label: '异常网站',
@@ -125,7 +125,7 @@ const overviewItems = computed(() => [
     desc: '离线或未知状态',
     icon: 'bi:x-circle-fill',
     iconColor: 'text-red-500',
-    containerClass: 'hover:border-red-500/50 dark:hover:border-red-400/50'
+    containerClass: 'hover:border-red-500/70 hover:ring-2 hover:ring-red-500/40 dark:hover:border-red-400/70 dark:hover:ring-red-400/40'
   },
   {
     label: '暂停/准备中',
@@ -133,7 +133,7 @@ const overviewItems = computed(() => [
     desc: '未在监控',
     icon: 'bi:pause-circle-fill',
     iconColor: 'text-yellow-500',
-    containerClass: 'hover:border-yellow-500/50 dark:hover:border-yellow-400/50'
+    containerClass: 'hover:border-yellow-500/70 hover:ring-2 hover:ring-yellow-500/40 dark:hover:border-yellow-400/70 dark:hover:ring-yellow-400/40'
   },
   {
     label: '平均响应',
@@ -142,7 +142,7 @@ const overviewItems = computed(() => [
     desc: '在线站点网络延迟',
     icon: 'bi:clock',
     iconColor: 'text-blue-500',
-    containerClass: 'hover:border-blue-500/50 dark:hover:border-blue-400/50'
+    containerClass: 'hover:border-blue-500/70 hover:ring-2 hover:ring-blue-500/40 dark:hover:border-blue-400/70 dark:hover:ring-blue-400/40'
   }
 ])
 
