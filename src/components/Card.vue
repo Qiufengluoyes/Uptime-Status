@@ -263,16 +263,11 @@
               <div
                 v-for="(day, dayIndex) in getTimelineDays(monitor)"
                 :key="dayIndex"
-                class="group relative flex-1 min-w-0 aspect-square max-h-full rounded-[3px] transition-transform duration-150 hover:scale-125 hover:z-10"
+                class="relative flex-1 min-w-0 aspect-square max-h-full rounded-[3px] transition-transform duration-150 hover:scale-125 hover:z-10"
                 :style="{ backgroundColor: getTimelineDayColor(day) }"
-              >
-                <!-- 自定义浮窗：鼠标移入立即显示，不需要等浏览器原生提示 -->
-                <div
-                  class="pointer-events-none absolute bottom-full left-1/2 z-30 mb-1.5 hidden -translate-x-1/2 rounded-md bg-gray-900/95 px-2 py-1 text-xs whitespace-nowrap text-white shadow-lg group-hover:block dark:bg-gray-950/95"
-                >
-                  {{ getTimelineDayTitle(day, monitor) }}
-                </div>
-              </div>
+                @mouseenter="showTimelineTooltip($event, day, monitor)"
+                @mouseleave="hideTimelineTooltip"
+              ></div>
             </div>
             <div class="flex justify-between text-xs text-gray-400 mt-2">
               <span>30天前</span>
@@ -452,6 +447,18 @@
       </Transition>
     </div>
   </Teleport>
+
+  <!-- 全局可用率浮窗：通过 Teleport 挂到 body，避免被卡片遮挡 -->
+  <Teleport to="body">
+    <div
+      v-if="timelineTooltip.visible"
+      class="fixed z-[9999] pointer-events-none -translate-x-1/2 -translate-y-full rounded-md bg-gray-900/95 px-2 py-1 text-xs whitespace-nowrap text-white shadow-lg dark:bg-gray-950/95"
+      :style="{ left: timelineTooltip.x + 'px', top: timelineTooltip.y + 'px' }"
+    >
+      {{ timelineTooltip.text }}
+    </div>
+  </Teleport>
+
 </template>
 
 
@@ -792,6 +799,7 @@ const showDowntimeList = ref(null)
 const showResponseTimeModal = ref(false)
 const selectedMonitor = ref(null)
 const downtimeExpanded = ref({})
+const timelineTooltip = ref({ visible: false, text: '', x: 0, y: 0 })
 
 /**
  * URL 处理函数
@@ -882,6 +890,22 @@ const getTimelineDayTitle = (day, monitor) => {
   return `${dateText}：可用率 ${Number(day.value).toFixed(2)}%`
 }
 
+const clamp = (value, min, max) => Math.min(Math.max(value, min), max)
+
+const showTimelineTooltip = (event, day, monitor) => {
+  const rect = event.currentTarget.getBoundingClientRect()
+  timelineTooltip.value = {
+    visible: true,
+    text: getTimelineDayTitle(day, monitor),
+    x: clamp(rect.left + rect.width / 2, 90, window.innerWidth - 90),
+    y: rect.top - 8
+  }
+}
+
+const hideTimelineTooltip = () => {
+  timelineTooltip.value.visible = false
+}
+
 const hasResponseTimeData = (monitor) => {
   const value = monitor?.stats?.avgResponseTime
   return value != null && Number.isFinite(Number(value))
@@ -955,5 +979,6 @@ onUnmounted(() => {
   document.removeEventListener('click', closeOnClickOutside)
   window.removeEventListener('keydown', handleKeydown)
   document.body.style.overflow = ''
+  timelineTooltip.value.visible = false
 })
 </script>
