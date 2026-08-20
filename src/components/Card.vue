@@ -258,13 +258,15 @@
               </div>
             </div>
 
-            <!-- 时间线散点图 -->
-            <div class="h-12">
-              <Scatter
-                v-if="getChartConfig(monitor).data"
-                :data="getChartConfig(monitor).data"
-                :options="getChartConfig(monitor).options"
-              />
+            <!-- 30 天可用率方块 -->
+            <div class="flex items-stretch gap-[3px] h-11 sm:h-12">
+              <div
+                v-for="(day, dayIndex) in getTimelineDays(monitor)"
+                :key="dayIndex"
+                class="flex-1 min-w-0 h-full rounded-[3px] transition-transform duration-150 hover:scale-125 hover:z-10"
+                :style="{ backgroundColor: getTimelineDayColor(day) }"
+                :title="getTimelineDayTitle(day, monitor)"
+              ></div>
             </div>
             <div class="flex justify-between text-xs text-gray-400 mt-2">
               <span>30天前</span>
@@ -451,7 +453,7 @@
 import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue'
 import { format } from 'date-fns'
 import { Icon } from '@iconify/vue'
-import { Scatter, Line } from 'vue-chartjs'
+import { Line } from 'vue-chartjs'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -460,11 +462,10 @@ import {
   LineElement,
   Title,
   Tooltip,
-  Legend,
-  TimeScale
+  Legend
 } from 'chart.js'
 import {
-  getStatusChartConfig,
+  getChartColor,
   getResponseTimeChartData,
   responseTimeChartOptions
 } from '@/utils/chartConfig'
@@ -477,8 +478,7 @@ ChartJS.register(
   LineElement,
   Title,
   Tooltip,
-  Legend,
-  TimeScale
+  Legend
 )
 
 const props = defineProps({
@@ -785,7 +785,6 @@ const getDowntimeStats = (monitor) => {
 const showDowntimeList = ref(null)
 const showResponseTimeModal = ref(false)
 const selectedMonitor = ref(null)
-const isMobile = ref(window.innerWidth < 768)
 const downtimeExpanded = ref({})
 
 /**
@@ -846,9 +845,36 @@ const getValidDays = (monitor) => {
 }
 
 /**
- * 获取图表配置
+ * 30 天可用率方块数据（固定 30 个，方便对齐和间距控制）
  */
-const getChartConfig = (monitor) => getStatusChartConfig(monitor, dateRange.value, isMobile.value)
+const getTimelineDays = (monitor) => {
+  const raw = monitor.stats?.dailyUptimes || []
+  const data = Array.from({ length: 30 }, (_, i) => raw[i] ?? null)
+
+  const now = Date.now()
+  const createTime = monitor.create_datetime ? monitor.create_datetime * 1000 : now
+  const effectiveCreateTime = createTime > now ? now : createTime
+  const daysSinceStart = Math.max(0, Math.floor(
+    (new Date(effectiveCreateTime) - dateRange.value.startDate) / 86400000
+  ))
+
+  return data.map((value, i) => ({
+    value,
+    date: dateRange.value.dates[i],
+    status: monitor.status,
+    isBeforeCreation: i < daysSinceStart
+  }))
+}
+
+const getTimelineDayColor = (day) => getChartColor(day.value, day.isBeforeCreation, day.status)
+
+const getTimelineDayTitle = (day, monitor) => {
+  const dateText = format(day.date, 'yyyy-MM-dd')
+  if (day.isBeforeCreation) return `${dateText}：无数据`
+  if (day.status === 0) return `${dateText}：已暂停`
+  if (day.value == null || isNaN(day.value)) return `${dateText}：无数据`
+  return `${dateText}：可用率 ${Number(day.value).toFixed(2)}%`
+}
 
 const hasResponseTimeData = (monitor) => {
   const value = monitor?.stats?.avgResponseTime
@@ -912,22 +938,15 @@ const handleKeydown = (e) => {
 }
 
 /**
- * 更新移动端状态
- */
-const updateMobileState = () => isMobile.value = window.innerWidth < 768
-
-/**
  * 生命周期钩子
  */
 onMounted(() => {
   document.addEventListener('click', closeOnClickOutside)
-  window.addEventListener('resize', updateMobileState)
   window.addEventListener('keydown', handleKeydown)
 })
 
 onUnmounted(() => {
   document.removeEventListener('click', closeOnClickOutside)
-  window.removeEventListener('resize', updateMobileState)
   window.removeEventListener('keydown', handleKeydown)
   document.body.style.overflow = ''
 })
