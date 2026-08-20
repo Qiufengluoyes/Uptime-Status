@@ -131,12 +131,12 @@
                 rel="noopener noreferrer"
                 :aria-label="`打开 ${monitor.friendly_name}`"
                 :title="`打开 ${monitor.friendly_name}`"
-                class="w-5 h-5 p-1.5 rounded-full transition-colors duration-200
+                class="flex items-center justify-center w-7 h-7 rounded-full transition-colors duration-200
                   text-gray-400 hover:text-gray-600 hover:bg-gray-100
                   dark:text-gray-500 dark:hover:text-gray-400 dark:hover:bg-gray-700/50
-                  box-content shrink-0"
+                  shrink-0"
               >
-                <Icon icon="bi:link-45deg" class="w-5 h-5 -m-1.5" aria-hidden="true" />
+                <Icon icon="bi:link-45deg" class="w-4 h-4" aria-hidden="true" />
               </a>
             </div>
           </div>

@@ -1,28 +1,28 @@
 <template>
-  <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 mb-6">
+  <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 lg:gap-5 mb-6">
     <div
       v-for="(item, index) in overviewItems"
       :key="index"
-      class="card-base animated-border animate-fade"
+      class="card-base animated-border animate-fade p-4 sm:p-5"
       :class="[item.containerClass]"
       @mouseenter="$event.currentTarget.classList.add('hovered')"
     >
-      <div class="flex items-start justify-between relative">
+      <div class="flex items-center justify-between gap-3 relative">
         <div class="min-w-0">
           <div class="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
             {{ item.label }}
           </div>
-          <div class="mt-2 text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
-            <span>{{ displayValues[index] }}</span><span v-if="item.unit">{{ item.unit }}</span>
+          <div class="mt-1.5 sm:mt-2 text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 leading-tight">
+            <span>{{ displayValues[index] }}</span><span v-if="item.unit" class="text-sm sm:text-base ml-0.5">{{ item.unit }}</span>
           </div>
-          <div class="mt-1.5 text-xs text-gray-500 dark:text-gray-400 truncate">
+          <div class="mt-1 text-xs text-gray-500 dark:text-gray-400 truncate">
             {{ item.desc }}
           </div>
         </div>
-        <div class="p-2.5 bg-gray-50 dark:bg-gray-800 rounded-lg shrink-0">
+        <div class="p-2 sm:p-2.5 bg-gray-50 dark:bg-gray-800 rounded-lg shrink-0 self-center">
           <Icon
             :icon="item.icon"
-            class="w-6 h-6 transition-colors duration-200"
+            class="w-5 h-5 sm:w-6 sm:h-6 transition-colors duration-200"
             :class="item.iconColor"
             aria-hidden="true"
           />
