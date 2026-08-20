@@ -24,7 +24,7 @@ const CHART_CONFIG = {
       mode: 'nearest'
     }
   },
-  
+
   points: {
     pointBackgroundColor: '#fff',
     pointBorderColor: '#10b981',
@@ -32,7 +32,7 @@ const CHART_CONFIG = {
     pointHoverBorderWidth: 1.5,
     pointHoverBackgroundColor: '#fff'
   },
-  
+
   colors: {
     success: '#10b981',
     warning: '#eab308',
@@ -54,13 +54,13 @@ export const getChartColor = (value, isBeforeCreation, status) => {
   if (isBeforeCreation) return CHART_CONFIG.colors.gray
   if (status === 0) return CHART_CONFIG.colors.paused  // 使用 status 判断暂停状态
   if (value === null || isNaN(value)) return CHART_CONFIG.colors.error
-  
+
   const thresholds = [
     { min: 99.9, color: CHART_CONFIG.colors.success },  // ≥99.9% 绿色
     { min: 90, color: CHART_CONFIG.colors.warning },    // ≥90% 黄色
     { min: 0.1, color: CHART_CONFIG.colors.orange }     // >0% 橙色
   ]
-  
+
   // 等于0时显示红色，其他情况按阈值判断
   if (value === 0) return CHART_CONFIG.colors.error
   return thresholds.find(t => value >= t.min)?.color || CHART_CONFIG.colors.orange
@@ -74,11 +74,13 @@ export const getChartColor = (value, isBeforeCreation, status) => {
  * @returns {Object} 图表配置对象
  */
 export const getStatusChartConfig = (monitor, dateRange, isMobile) => {
-  const data = monitor.stats?.dailyUptimes ?? Array(30).fill(null)
+  const rawData = monitor.stats?.dailyUptimes || []
+  // 确保始终是 30 个点，避免图表错位
+  const data = Array.from({ length: 30 }, (_, i) => rawData[i] ?? null)
 
   // 添加时间验证逻辑
-  const createTime = monitor.create_datetime * 1000
   const now = Date.now()
+  const createTime = monitor.create_datetime ? monitor.create_datetime * 1000 : now
   const effectiveCreateTime = createTime > now ? now : createTime
 
   const daysSinceStart = Math.max(0, Math.floor(
@@ -98,7 +100,7 @@ export const getStatusChartConfig = (monitor, dateRange, isMobile) => {
           status: monitor.status,
           isBeforeCreation: i < daysSinceStart  // 添加创建前标记
         })),
-        backgroundColor: data.map((v, i) => 
+        backgroundColor: data.map((v, i) =>
           getChartColor(v, i < daysSinceStart, monitor.status)
         ),
         borderColor: 'transparent',
@@ -157,16 +159,18 @@ export const getResponseTimeChartData = (monitor) => {
   }).reverse()
 
   // 处理数据
-  const validData = [...(monitor?.stats?.dailyResponseTimes || [])]
+  const source = [...(monitor?.stats?.dailyResponseTimes || [])]
     .reverse()
-    .slice(-24) // 只取最近24小时的数据
-    .map(time => {
-      // 严格的数值检查
-      if (typeof time !== 'number' || isNaN(time) || time < 0 || time > 60000) {
-        return null
-      }
-      return time
-    })
+    .slice(-24)
+
+  const validData = Array.from({ length: 24 }, (_, i) => {
+    const time = source[i]
+    // 严格的数值检查
+    if (typeof time !== 'number' || isNaN(time) || time < 0 || time > 60000) {
+      return null
+    }
+    return time
+  })
 
   return {
     labels: hourLabels,
@@ -218,7 +222,7 @@ export const responseTimeChartOptions = {
       beginAtZero: true,
       border: { display: false },
       grid: {
-        color: 'rgba(229, 231, 235, 0.5)',
+        color: 'rgba(148, 163, 184, 0.2)',
         drawBorder: false,
         lineWidth: 1
       },
@@ -245,4 +249,4 @@ export const responseTimeChartOptions = {
     easing: 'easeInOutCubic',
     delay: (context) => context.dataIndex * 20
   }
-} 
+}

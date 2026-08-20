@@ -2,21 +2,23 @@
   <!-- 加载状态和错误提示 -->
   <div v-if="!monitors?.length" class="flex items-center justify-center p-12">
     <Icon v-if="!error"
-      icon="svg-spinners:180-ring-with-bg" 
+      icon="svg-spinners:180-ring-with-bg"
       class="w-12 h-12 text-gray-400 dark:text-gray-300 animate-spin"
+      aria-hidden="true"
     />
-    <div v-else 
+    <div v-else
          class="flex flex-col items-center gap-4 p-8 rounded-2xl
-           bg-red-50/50 dark:bg-red-900/20 
+           bg-red-50/50 dark:bg-red-900/20
            border-2 border-red-100 dark:border-red-800/50
            backdrop-blur-sm animate-fade"
     >
       <div class="relative">
-        <Icon 
-          icon="carbon:warning-filled" 
+        <Icon
+          icon="carbon:warning-filled"
           class="w-12 h-12 text-red-500/90 dark:text-red-400/90"
+          aria-hidden="true"
         />
-        <div class="absolute inset-0 w-12 h-12 bg-red-500/20 dark:bg-red-400/20 rounded-full animate-ping" />
+        <div class="absolute inset-0 w-12 h-12 bg-red-500/20 dark:bg-red-400/20 rounded-full motion-safe:animate-ping" />
       </div>
       <div class="text-center">
         <div class="text-red-600 dark:text-red-400 font-medium mb-1">
@@ -27,202 +29,303 @@
   </div>
 
   <!-- 监控卡片网格布局 -->
-  <div v-else class="grid gap-6 grid-cols-1 md:grid-cols-2">
-    <!-- 单个监控卡片 -->
-    <div v-for="monitor in sortedMonitors" 
-         :key="monitor.id"
-         class="card-base animated-border p-6 rounded-2xl backdrop-blur-sm animate-fade"
-         :class="[
-           monitor.status === 0 || monitor.status === 1 
-             ? 'after:border-yellow-500/50 dark:after:border-yellow-400/50'
-             : `after:border-${STATUS_CONFIG[monitor.status]?.color}-500/50 dark:after:border-${STATUS_CONFIG[monitor.status]?.color}-400/50`
-         ]"
-         @mouseenter="$event.target.classList.add('hovered')"
+  <div v-else>
+    <!-- 整体状态摘要 -->
+    <div
+      class="flex items-center gap-2 px-4 py-3 mb-6 rounded-xl text-sm font-medium
+        bg-emerald-50/80 dark:bg-emerald-900/20
+        border border-emerald-200/70 dark:border-emerald-800/50
+        text-emerald-700 dark:text-emerald-300"
+      :class="summaryType === 'error' ? 'bg-red-50/80 dark:bg-red-900/20 border-red-200/70 dark:border-red-800/50 text-red-700 dark:text-red-300' : summaryType === 'warning' ? 'bg-yellow-50/80 dark:bg-yellow-900/20 border-yellow-200/70 dark:border-yellow-800/50 text-yellow-700 dark:text-yellow-300' : ''"
     >
-      <!-- 卡片头部：标题和状态指示器 -->
-      <div class="flex items-start sm:items-center justify-between gap-3 sm:gap-4 mb-6">
-        <div class="min-w-0">
-          <div class="flex items-center gap-2">
-            <h2 class="text-lg sm:text-xl font-bold truncate text-gray-800 dark:text-gray-100">
-              {{ monitor.friendly_name }}
-            </h2>
-            <Icon 
-              icon="bi:link-45deg" 
-              class="w-5 h-5 p-1.5 rounded-full transition-colors duration-200
-                text-gray-400 hover:text-gray-600 hover:bg-gray-100
-                dark:text-gray-500 dark:hover:text-gray-400 dark:hover:bg-gray-700/50
-                box-content"
-              @click="openUrl(monitor.url)"
-            />
-          </div>
-        </div>
-        <div class="shrink-0">
-          <div v-if="typeof monitor.status !== 'undefined'"
-               :class="[
-                 'inline-flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full font-medium text-sm whitespace-nowrap',
-                 STATUS_CONFIG[monitor.status]?.classes
-               ]"
-          >
-            <div class="relative flex">
-              <div :class="[
-                'w-3 h-3 rounded-full',
-                getStatusClasses(monitor.status).dot
-              ]"></div>
-              <div :class="[
-                'absolute inset-0 w-3 h-3 rounded-full animate-ping opacity-75',
-                getStatusClasses(monitor.status).dotPing
-              ]"></div>
-            </div>
-            <span>{{ STATUS_CONFIG[monitor.status]?.text }}</span>
-          </div>
-        </div>
+      <Icon
+        :icon="summaryType === 'ok' ? 'carbon:checkmark-filled' : summaryType === 'error' ? 'carbon:warning-filled' : 'carbon:information-filled'"
+        class="w-5 h-5 shrink-0"
+        aria-hidden="true"
+      />
+      <span>{{ summaryText }}</span>
+    </div>
+
+    <!-- 搜索 / 筛选 / 排序工具栏 -->
+    <div class="flex flex-col sm:flex-row gap-3 mb-6">
+      <div class="relative flex-1 min-w-[200px]">
+        <Icon
+          icon="carbon:search"
+          class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500 pointer-events-none"
+          aria-hidden="true"
+        />
+        <input
+          v-model.trim="searchQuery"
+          type="search"
+          placeholder="搜索站点名称或 URL"
+          aria-label="搜索站点"
+          class="w-full h-10 pl-9 pr-3 rounded-lg text-sm
+            bg-white dark:bg-gray-800/60
+            border border-gray-200 dark:border-gray-700
+            text-gray-700 dark:text-gray-200
+            placeholder-gray-400 dark:placeholder-gray-500
+            focus:outline-none focus:ring-2 focus:ring-emerald-500/40
+            transition-shadow"
+        />
       </div>
+      <div class="flex gap-3">
+        <select
+          v-model="statusFilter"
+          aria-label="按状态筛选"
+          class="h-10 px-3 rounded-lg text-sm
+            bg-white dark:bg-gray-800/60
+            border border-gray-200 dark:border-gray-700
+            text-gray-700 dark:text-gray-200
+            focus:outline-none focus:ring-2 focus:ring-emerald-500/40
+            cursor-pointer"
+        >
+          <option value="all">全部状态</option>
+          <option value="online">在线</option>
+          <option value="abnormal">异常</option>
+          <option value="pending">暂停 / 准备中</option>
+        </select>
+        <select
+          v-model="sortBy"
+          aria-label="排序方式"
+          class="h-10 px-3 rounded-lg text-sm
+            bg-white dark:bg-gray-800/60
+            border border-gray-200 dark:border-gray-700
+            text-gray-700 dark:text-gray-200
+            focus:outline-none focus:ring-2 focus:ring-emerald-500/40
+            cursor-pointer"
+        >
+          <option value="default">默认排序</option>
+          <option value="name">按名称</option>
+          <option value="response">按响应时间</option>
+          <option value="uptime">按可用率</option>
+        </select>
+      </div>
+    </div>
 
-      <!-- 卡片主体：统计数据和图表 -->
-      <div class="space-y-4">
-        <!-- 响应时间和运行时间统计卡片 -->
-        <div class="grid grid-cols-2 gap-4">
-          <div class="inner-card relative">
-            <Icon 
-              icon="ri:line-chart-line"
+    <!-- 无匹配结果 -->
+    <div v-if="!visibleMonitors.length"
+         class="flex flex-col items-center justify-center gap-3 p-12 text-gray-400 dark:text-gray-500">
+      <Icon icon="carbon:search" class="w-10 h-10" aria-hidden="true" />
+      <p class="text-sm">没有符合条件的站点</p>
+    </div>
+
+    <!-- 卡片网格 -->
+    <div v-else class="grid gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+      <div v-for="monitor in visibleMonitors"
+           :key="monitor.id"
+           class="card-base animated-border p-6 rounded-2xl backdrop-blur-sm animate-fade"
+           :class="getCardBorderClass(monitor.status)"
+           @mouseenter="$event.currentTarget.classList.add('hovered')"
+      >
+        <!-- 卡片头部：标题和状态指示器 -->
+        <div class="flex items-start sm:items-center justify-between gap-3 sm:gap-4 mb-6">
+          <div class="min-w-0">
+            <div class="flex items-center gap-2">
+              <h2 class="text-lg sm:text-xl font-bold truncate text-gray-800 dark:text-gray-100">
+                {{ monitor.friendly_name }}
+              </h2>
+              <a
+                v-if="monitor.url"
+                :href="normalizeUrl(monitor.url)"
+                target="_blank"
+                rel="noopener noreferrer"
+                :aria-label="`打开 ${monitor.friendly_name}`"
+                :title="`打开 ${monitor.friendly_name}`"
+                class="w-5 h-5 p-1.5 rounded-full transition-colors duration-200
+                  text-gray-400 hover:text-gray-600 hover:bg-gray-100
+                  dark:text-gray-500 dark:hover:text-gray-400 dark:hover:bg-gray-700/50
+                  box-content shrink-0"
+              >
+                <Icon icon="bi:link-45deg" class="w-5 h-5 -m-1.5" aria-hidden="true" />
+              </a>
+            </div>
+          </div>
+          <div class="shrink-0">
+            <div
               :class="[
-                'absolute top-3 right-3 w-4 h-4 p-1 rounded-full transition-colors duration-200 box-content cursor-pointer',
-                getStatusClasses(monitor.status).text,
-                getStatusClasses(monitor.status).hover.text,
-                getStatusClasses(monitor.status).hover.bg
+                'inline-flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full font-medium text-sm whitespace-nowrap',
+                getStatusConfig(monitor.status).classes
               ]"
-              @click="openResponseTimeModal(monitor)"
-            />
-            <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">平均响应时间</div>
-            <div class="text-xl font-bold text-gray-900 dark:text-gray-100">
-              {{ formatters.responseTime(monitor.stats?.avgResponseTime) }}
-            </div>
-            <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              最近24小时
-            </div>
-          </div>
-          <div class="inner-card">
-            <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">平均运行时间</div>
-            <div class="text-xl font-bold text-gray-900 dark:text-gray-100">
-              {{ formatters.uptime(monitor.stats?.uptime) }}
-            </div>
-            <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              最近{{ getValidDays(monitor) }}天
-            </div>
-          </div>
-        </div>
-
-        <!-- 状态时间线图表 -->
-        <div class="inner-card">
-          <!-- 监控类型和状态指示器 -->
-          <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-4">
-            <div class="flex items-center gap-1">
+            >
               <div class="relative flex">
                 <div :class="[
-                  'w-2 h-2 rounded-full',
+                  'w-3 h-3 rounded-full',
                   getStatusClasses(monitor.status).dot
                 ]"></div>
                 <div :class="[
-                  'absolute inset-0 w-2 h-2 rounded-full animate-ping opacity-75',
+                  'absolute inset-0 w-3 h-3 rounded-full motion-safe:animate-ping opacity-75',
                   getStatusClasses(monitor.status).dotPing
                 ]"></div>
               </div>
-              <span class="text-xs">{{ getMonitorType(monitor) }} / {{ Math.floor(monitor.interval / 60) }}m</span>
-              <div class="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-600" />
-              <span :class="[
-                'text-xs font-medium',
-                getStatusClasses(monitor.status).text
-              ]">
-                {{ STATUS_CONFIG[monitor.status]?.text }}
-              </span>
+              <span>{{ getStatusConfig(monitor.status).text }}</span>
             </div>
-          </div>
-
-          <!-- 时间线散点图 -->
-          <div class="h-12">
-            <Scatter
-              v-if="getChartConfig(monitor).data"
-              :data="getChartConfig(monitor).data"
-              :options="getChartConfig(monitor).options"
-            />
-          </div>
-          <div class="flex justify-between text-xs text-gray-400 mt-2">
-            <span>30天前</span>
-            <span class="text-gray-500">
-              {{ getDowntimeStats(monitor) }}
-            </span>
-            <span>今日</span>
           </div>
         </div>
 
-        <!-- 故障记录下拉列表 -->
-        <div class="relative">
-          <button 
-            @click="toggleDowntimeList(monitor.id)" 
-            :data-monitor-id="monitor.id.toString()"
-            class="w-full px-4 py-3 flex items-center justify-between text-left
-              bg-gray-50 dark:bg-gray-800/50
-              rounded-lg transition-colors duration-200
-              hover:bg-gray-100 dark:hover:bg-gray-700/50
-              focus:outline-none"
-          >
-            <span class="text-xs text-gray-500 dark:text-gray-400">故障记录</span>
-            <Icon 
-              icon="bi:chevron-up"
-              class="w-4 h-4 text-gray-400 transition-transform duration-200"
-              :class="{ 'rotate-180': showDowntimeList === monitor.id }"
-            />
-          </button>
-          
-          <Transition
-            enter-active-class="transition-all duration-200 ease-out"
-            enter-from-class="opacity-0 translate-y-[10px] scale-95"
-            enter-to-class="opacity-100 translate-y-0 scale-100"
-            leave-active-class="transition-all duration-200 ease-in"
-            leave-from-class="opacity-100 translate-y-0 scale-100"
-            leave-to-class="opacity-0 translate-y-[10px] scale-95"
-          >
-            <div v-if="showDowntimeList === monitor.id" 
-                 class="absolute bottom-full left-0 right-0 mb-2
-                   bg-white dark:bg-gray-800 border-[1.5px] border-gray-200 dark:border-gray-700 
-                   rounded-lg downtime-list"
-            >
-              <div class="p-4 max-h-[280px] overflow-y-auto">
-                <TransitionGroup 
-                  tag="div"
-                  class="space-y-2"
-                  enter-active-class="transition duration-200 ease-out"
-                  enter-from-class="opacity-0 scale-95"
-                  enter-to-class="opacity-100 scale-100"
-                  leave-active-class="transition duration-200 ease-in"
-                  leave-from-class="opacity-100 scale-100"
-                  leave-to-class="opacity-0 scale-95"
-                  move-class="transition duration-200"
-                >
-                  <div v-if="getDowntimeLogs(monitor)?.length" 
-                       v-for="log in getDowntimeLogs(monitor)" 
-                       :key="log.id"
-                       class="p-3 bg-red-50/90 dark:bg-red-900/20 rounded-lg
-                         border border-red-200/80 dark:border-red-800/80"
-                  >
-                    <div class="flex justify-between">
-                      <span class="text-red-600/90 dark:text-red-400/90 text-xs">{{ getErrorMessage(log.reason) }}</span>
-                      <span class="text-red-600/80 dark:text-red-400/80 text-xs">{{ formatters.dateTime(log.datetime) }}</span>
-                    </div>
-                    <div class="mt-1 text-red-600/80 dark:text-red-400/80 text-xs">
-                      持续时间: {{ formatters.duration(log.duration) }}
-                    </div>
-                  </div>
-                  <div v-else 
-                       key="empty"
-                       class="text-center text-3xs text-gray-400"
-                  >
-                    近期无故障记录
-                  </div>
-                </TransitionGroup>
+        <!-- 卡片主体：统计数据和图表 -->
+        <div class="space-y-4">
+          <!-- 响应时间和运行时间统计卡片 -->
+          <div class="grid grid-cols-2 gap-4">
+            <div class="inner-card relative">
+              <button
+                type="button"
+                :aria-label="`查看 ${monitor.friendly_name} 的响应时间趋势`"
+                :title="`查看 ${monitor.friendly_name} 的响应时间趋势`"
+                :class="[
+                  'absolute top-2.5 right-2.5 w-7 h-7 flex items-center justify-center rounded-full transition-colors duration-200 cursor-pointer',
+                  getStatusClasses(monitor.status).text,
+                  getStatusClasses(monitor.status).hover.text,
+                  getStatusClasses(monitor.status).hover.bg
+                ]"
+                @click="openResponseTimeModal(monitor)"
+              >
+                <Icon icon="ri:line-chart-line" class="w-4 h-4" aria-hidden="true" />
+              </button>
+              <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">平均响应时间</div>
+              <div class="text-xl font-bold text-gray-900 dark:text-gray-100">
+                {{ formatters.responseTime(monitor.stats?.avgResponseTime) }}
+              </div>
+              <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                最近24小时
               </div>
             </div>
-          </Transition>
+            <div class="inner-card">
+              <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">平均运行时间</div>
+              <div class="text-xl font-bold text-gray-900 dark:text-gray-100">
+                {{ formatters.uptime(monitor.stats?.uptime) }}
+              </div>
+              <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                最近{{ getValidDays(monitor) }}天
+              </div>
+            </div>
+          </div>
+
+          <!-- 状态时间线图表 -->
+          <div class="inner-card">
+            <!-- 监控类型和状态指示器 -->
+            <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-4">
+              <div class="flex items-center gap-1">
+                <div class="relative flex">
+                  <div :class="[
+                    'w-2 h-2 rounded-full',
+                    getStatusClasses(monitor.status).dot
+                  ]"></div>
+                  <div :class="[
+                    'absolute inset-0 w-2 h-2 rounded-full motion-safe:animate-ping opacity-75',
+                    getStatusClasses(monitor.status).dotPing
+                  ]"></div>
+                </div>
+                <span class="text-xs">{{ getMonitorType(monitor) }} / {{ formatInterval(monitor.interval) }}</span>
+                <div class="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-600" />
+                <span :class="[
+                  'text-xs font-medium',
+                  getStatusClasses(monitor.status).text
+                ]">
+                  {{ getStatusConfig(monitor.status).text }}
+                </span>
+              </div>
+            </div>
+
+            <!-- 时间线散点图 -->
+            <div class="h-12">
+              <Scatter
+                v-if="getChartConfig(monitor).data"
+                :data="getChartConfig(monitor).data"
+                :options="getChartConfig(monitor).options"
+              />
+            </div>
+            <div class="flex justify-between text-xs text-gray-400 mt-2">
+              <span>30天前</span>
+              <span class="text-gray-500">
+                {{ getDowntimeStats(monitor) }}
+              </span>
+              <span>今日</span>
+            </div>
+          </div>
+
+          <!-- 故障记录下拉列表 -->
+          <div class="relative">
+            <button
+              type="button"
+              @click="toggleDowntimeList(monitor.id)"
+              :data-monitor-id="monitor.id.toString()"
+              :aria-expanded="showDowntimeList === monitor.id"
+              :aria-controls="`downtime-panel-${monitor.id}`"
+              class="w-full px-4 py-3 flex items-center justify-between text-left
+                bg-gray-50 dark:bg-gray-800/50
+                rounded-lg transition-colors duration-200
+                hover:bg-gray-100 dark:hover:bg-gray-700/50
+                focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
+            >
+              <span class="text-xs text-gray-500 dark:text-gray-400">故障记录</span>
+              <Icon
+                icon="bi:chevron-up"
+                class="w-4 h-4 text-gray-400 transition-transform duration-200"
+                :class="{ 'rotate-180': showDowntimeList === monitor.id }"
+                aria-hidden="true"
+              />
+            </button>
+
+            <Transition
+              enter-active-class="transition-all duration-200 ease-out"
+              enter-from-class="opacity-0 translate-y-[10px] scale-95"
+              enter-to-class="opacity-100 translate-y-0 scale-100"
+              leave-active-class="transition-all duration-200 ease-in"
+              leave-from-class="opacity-100 translate-y-0 scale-100"
+              leave-to-class="opacity-0 translate-y-[10px] scale-95"
+            >
+              <div v-if="showDowntimeList === monitor.id"
+                   :id="`downtime-panel-${monitor.id}`"
+                   class="absolute bottom-full left-0 right-0 mb-2
+                     bg-white dark:bg-gray-800 border-[1.5px] border-gray-200 dark:border-gray-700
+                     rounded-lg downtime-list shadow-lg"
+              >
+                <div class="p-4 max-h-[280px] overflow-y-auto">
+                  <TransitionGroup
+                    tag="div"
+                    class="space-y-2"
+                    enter-active-class="transition duration-200 ease-out"
+                    enter-from-class="opacity-0 scale-95"
+                    enter-to-class="opacity-100 scale-100"
+                    leave-active-class="transition duration-200 ease-in"
+                    leave-from-class="opacity-100 scale-100"
+                    leave-to-class="opacity-0 scale-95"
+                    move-class="transition duration-200"
+                  >
+                    <div v-if="getDowntimeLogs(monitor)?.length"
+                         v-for="log in getDowntimeLogs(monitor)"
+                         :key="log.id"
+                         class="p-3 bg-red-50/90 dark:bg-red-900/20 rounded-lg
+                           border border-red-200/80 dark:border-red-800/80"
+                    >
+                      <div class="flex justify-between gap-2">
+                        <span class="text-red-600/90 dark:text-red-400/90 text-xs">{{ getErrorMessage(log.reason) }}</span>
+                        <span class="text-red-600/80 dark:text-red-400/80 text-xs shrink-0">{{ formatters.dateTime(log.datetime) }}</span>
+                      </div>
+                      <div class="mt-1 text-red-600/80 dark:text-red-400/80 text-xs">
+                        持续时间: {{ formatters.duration(log.duration) }}
+                      </div>
+                    </div>
+                    <div v-else
+                         key="empty"
+                         class="text-center text-xs text-gray-400"
+                    >
+                      近期无故障记录
+                    </div>
+                  </TransitionGroup>
+                  <button
+                    v-if="(monitor.stats?.downtimeLogs || []).length > 15"
+                    type="button"
+                    class="mt-3 w-full text-xs font-medium text-gray-500 dark:text-gray-400
+                      hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+                    @click="toggleDowntimeExpanded(monitor.id)"
+                  >
+                    {{ downtimeExpanded[monitor.id] ? '收起' : `查看全部 ${(monitor.stats?.downtimeLogs || []).length} 条` }}
+                  </button>
+                </div>
+              </div>
+            </Transition>
+          </div>
         </div>
       </div>
     </div>
@@ -230,8 +333,9 @@
 
   <!-- 响应时间详情模态框 -->
   <Teleport to="body">
-    <div v-if="modalMounted" 
+    <div v-if="modalMounted"
          class="fixed inset-0 z-50 flex items-center justify-center p-4"
+         @keydown.esc="closeModal"
     >
       <!-- 背景遮罩 -->
       <Transition
@@ -244,11 +348,11 @@
         leave-active-class="transition-opacity duration-300"
       >
         <div v-show="showResponseTimeModal"
-             class="absolute inset-0 bg-black/60" 
+             class="absolute inset-0 bg-black/60"
              @click="closeModal"
         ></div>
       </Transition>
-      
+
       <!-- 模态框内容 -->
       <Transition
         appear
@@ -261,30 +365,38 @@
         @after-leave="onAfterLeave"
       >
         <div v-show="showResponseTimeModal"
+             id="response-modal"
+             tabindex="-1"
+             role="dialog"
+             aria-modal="true"
+             :aria-label="selectedMonitor ? `${selectedMonitor.friendly_name} 响应时间趋势` : '响应时间趋势'"
              class="relative bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-3xl
                     shadow-xl border border-gray-200 dark:border-gray-700
-                    max-h-[90vh] overflow-y-auto"
+                    max-h-[90vh] overflow-y-auto outline-none"
              @click.stop
         >
           <div class="flex justify-between items-center mb-6">
             <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100">
-              响应时间趋势
+              {{ selectedMonitor?.friendly_name }} - 响应时间趋势
             </h3>
-            <button @click="closeModal"
-                    class="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full 
+            <button type="button" @click="closeModal"
+                    aria-label="关闭"
+                    class="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full
                            transition-colors duration-200">
-              <Icon icon="carbon:close" 
-                    class="w-5 h-5 text-gray-500 dark:text-gray-400" />
+              <Icon icon="carbon:close"
+                    class="w-5 h-5 text-gray-500 dark:text-gray-400"
+                    aria-hidden="true" />
             </button>
           </div>
-          
+
           <div class="h-[300px]">
             <!-- 无数据状态 -->
-            <div v-if="!selectedMonitor?.stats?.avgResponseTime" 
+            <div v-if="!hasResponseTimeData(selectedMonitor)"
                  class="h-full flex flex-col items-center justify-center gap-4">
-              <Icon 
-                icon="carbon:chart-line" 
+              <Icon
+                icon="carbon:chart-line"
                 class="w-12 h-12 text-gray-400 dark:text-gray-500"
+                aria-hidden="true"
               />
               <div class="text-gray-500 dark:text-gray-400 text-sm">
                 暂无数据
@@ -302,8 +414,9 @@
   </Teleport>
 </template>
 
+
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue'
 import { format } from 'date-fns'
 import { Icon } from '@iconify/vue'
 import { Scatter, Line } from 'vue-chartjs'
@@ -318,10 +431,10 @@ import {
   Legend,
   TimeScale
 } from 'chart.js'
-import { 
+import {
   getStatusChartConfig,
-  getResponseTimeChartData, 
-  responseTimeChartOptions 
+  getResponseTimeChartData,
+  responseTimeChartOptions
 } from '@/utils/chartConfig'
 
 // 注册 Chart.js 组件
@@ -342,20 +455,40 @@ const props = defineProps({
 })
 
 /**
- * 排序监控列表
+ * 整体状态摘要
  */
-const sortedMonitors = computed(() => {
-  if (!props.monitors) return []
-  return [...props.monitors].sort((a, b) => {
-    // 如果状态相同，保持原有顺序
-    if (a.status === b.status) return 0
-    // 将离线状态(9)排到最后
-    if (a.status === 9) return 1
-    if (b.status === 9) return -1
-    // 其他状态保持原有顺序
-    return 0
-  })
+const summary = computed(() => {
+  const list = props.monitors || []
+  const abnormal = list.filter(m => m.status === 9 || m.status === undefined).length
+  const pending = list.filter(m => m.status === 0 || m.status === 1).length
+
+  if (abnormal > 0) {
+    return {
+      type: 'error',
+      text: `当前有 ${abnormal} 个站点异常，请留意`
+    }
+  }
+  if (pending > 0) {
+    return {
+      type: 'warning',
+      text: `有 ${pending} 个站点处于暂停或准备中`
+    }
+  }
+  return {
+    type: 'ok',
+    text: list.length ? '全部站点运行正常' : ''
+  }
 })
+
+const summaryText = computed(() => summary.value.text)
+const summaryType = computed(() => summary.value.type)
+
+/**
+ * 搜索 / 筛选 / 排序
+ */
+const searchQuery = ref('')
+const statusFilter = ref('all')
+const sortBy = ref('default')
 
 /**
  * 状态常量定义
@@ -371,12 +504,12 @@ const STATUS = {
  * 状态配置映射
  */
 const STATUS_CONFIG = {
-  2: { 
+  2: {
     text: '在线', color: 'green',
     classes: 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400'
   },
   0: {
-    text: '暂停', color: 'yellow', 
+    text: '暂停', color: 'yellow',
     classes: 'bg-yellow-50 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400'
   },
   1: {
@@ -389,29 +522,112 @@ const STATUS_CONFIG = {
   }
 }
 
+const FALLBACK_STATUS = {
+  text: '未知', color: 'gray',
+  classes: 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
+}
+
+const getStatusConfig = (status) => STATUS_CONFIG[status] || FALLBACK_STATUS
+
+/**
+ * 卡片边框颜色静态映射（避免动态拼接 Tailwind 类）
+ */
+const CARD_BORDER_CLASSES = {
+  2: 'after:border-green-500/50 dark:after:border-green-400/50',
+  0: 'after:border-yellow-500/50 dark:after:border-yellow-400/50',
+  1: 'after:border-yellow-500/50 dark:after:border-yellow-400/50',
+  9: 'after:border-red-500/50 dark:after:border-red-400/50'
+}
+
+const getCardBorderClass = (status) => CARD_BORDER_CLASSES[status] || 'after:border-gray-500/50 dark:after:border-gray-400/50'
+
+/**
+ * 排序后的监控列表
+ */
+const visibleMonitors = computed(() => {
+  if (!props.monitors?.length) return []
+
+  const query = searchQuery.value.toLowerCase()
+
+  const filtered = props.monitors.filter(monitor => {
+    // 搜索
+    if (query) {
+      const name = (monitor.friendly_name || '').toLowerCase()
+      const url = (monitor.url || '').toLowerCase()
+      if (!name.includes(query) && !url.includes(query)) return false
+    }
+
+    // 状态筛选
+    if (statusFilter.value === 'online' && monitor.status !== STATUS.ONLINE) return false
+    if (statusFilter.value === 'abnormal' && monitor.status !== STATUS.OFFLINE) return false
+    if (statusFilter.value === 'pending' && monitor.status !== STATUS.PAUSED && monitor.status !== STATUS.PREPARING) return false
+
+    return true
+  })
+
+  const sorted = [...filtered]
+
+  if (sortBy.value === 'name') {
+    sorted.sort((a, b) => (a.friendly_name || '').localeCompare(b.friendly_name || '', 'zh-CN'))
+  } else if (sortBy.value === 'response') {
+    sorted.sort((a, b) => {
+      const av = a.stats?.avgResponseTime
+      const bv = b.stats?.avgResponseTime
+      if (av == null) return 1
+      if (bv == null) return -1
+      return av - bv
+    })
+  } else if (sortBy.value === 'uptime') {
+    sorted.sort((a, b) => {
+      const av = a.stats?.uptime
+      const bv = b.stats?.uptime
+      if (av == null) return 1
+      if (bv == null) return -1
+      return bv - av
+    })
+  } else {
+    // 默认排序：离线排最后，其余保持原有顺序
+    sorted.sort((a, b) => {
+      if (a.status === b.status) return 0
+      if (a.status === STATUS.OFFLINE) return 1
+      if (b.status === STATUS.OFFLINE) return -1
+      return 0
+    })
+  }
+
+  return sorted
+})
+
+
 /**
  * 格式化工具函数
  */
 const formatters = {
   /** 格式化响应时间 */
-  responseTime: time => `${Math.round(time || 0)} ms`,
+  responseTime: time => {
+    if (time == null || !Number.isFinite(Number(time))) return '—'
+    return `${Math.round(Number(time))} ms`
+  },
   /** 格式化运行时间 */
-  uptime: uptime => `${Number(uptime || 0).toFixed(2)}%`,
+  uptime: uptime => {
+    if (uptime == null || !Number.isFinite(Number(uptime))) return '—'
+    return `${Number(uptime).toFixed(2)}%`
+  },
   /** 格式化持续时间 */
   duration: seconds => {
     if (!seconds) return '0秒'
     const h = Math.floor(seconds / 3600)
     const m = Math.floor((seconds % 3600) / 60)
     const s = seconds % 60
-    
+
     // 如果超过100小时，只显示小时
     if (h >= 100) {
       return `约${h}小时`
     }
-    
+
     return [
       h && `${h}小时`,
-      m && `${m}分钟`, 
+      m && `${m}分钟`,
       (!h && !m && s) && `${s}秒`
     ].filter(Boolean).join('')
   },
@@ -422,37 +638,45 @@ const formatters = {
 /**
  * 获取状态对应的样式类
  */
-const getStatusClasses = computed(() => (status) => {
+const getStatusClasses = (status) => {
+  const isOnline = status === STATUS.ONLINE
+  const isPending = status === STATUS.PAUSED || status === STATUS.PREPARING
+  const isOffline = status === STATUS.OFFLINE
   return {
     dot: {
-      'bg-green-500 dark:bg-green-400': status === STATUS.ONLINE,
-      'bg-yellow-500 dark:bg-yellow-400': status === STATUS.PAUSED || status === STATUS.PREPARING,
-      'bg-red-500 dark:bg-red-400': status === STATUS.OFFLINE
+      'bg-green-500 dark:bg-green-400': isOnline,
+      'bg-yellow-500 dark:bg-yellow-400': isPending,
+      'bg-red-500 dark:bg-red-400': isOffline,
+      'bg-gray-400 dark:bg-gray-500': !isOnline && !isPending && !isOffline
     },
     dotPing: {
-      'bg-green-500 dark:bg-green-400': status === STATUS.ONLINE,
-      'bg-yellow-500 dark:bg-yellow-400': status === STATUS.PAUSED || status === STATUS.PREPARING,
-      'bg-red-500 dark:bg-red-400': status === STATUS.OFFLINE
+      'bg-green-500 dark:bg-green-400': isOnline,
+      'bg-yellow-500 dark:bg-yellow-400': isPending,
+      'bg-red-500 dark:bg-red-400': isOffline,
+      'bg-gray-400 dark:bg-gray-500': !isOnline && !isPending && !isOffline
     },
     text: {
-      'text-green-500': status === STATUS.ONLINE,
-      'text-yellow-500': status === STATUS.PAUSED || status === STATUS.PREPARING,
-      'text-red-500': status === STATUS.OFFLINE
+      'text-green-500': isOnline,
+      'text-yellow-500': isPending,
+      'text-red-500': isOffline,
+      'text-gray-400 dark:text-gray-500': !isOnline && !isPending && !isOffline
     },
     hover: {
       text: {
-        'hover:text-green-600 dark:hover:text-green-300': status === STATUS.ONLINE,
-        'hover:text-yellow-600 dark:hover:text-yellow-300': status === STATUS.PAUSED || status === STATUS.PREPARING,
-        'hover:text-red-600 dark:hover:text-red-300': status === STATUS.OFFLINE
+        'hover:text-green-600 dark:hover:text-green-300': isOnline,
+        'hover:text-yellow-600 dark:hover:text-yellow-300': isPending,
+        'hover:text-red-600 dark:hover:text-red-300': isOffline,
+        'hover:text-gray-500 dark:hover:text-gray-400': !isOnline && !isPending && !isOffline
       },
       bg: {
-        'hover:bg-green-50 dark:hover:bg-green-900/30': status === STATUS.ONLINE,
-        'hover:bg-yellow-50 dark:hover:bg-yellow-900/30': status === STATUS.PAUSED || status === STATUS.PREPARING,
-        'hover:bg-red-50 dark:hover:bg-red-900/30': status === STATUS.OFFLINE
+        'hover:bg-green-50 dark:hover:bg-green-900/30': isOnline,
+        'hover:bg-yellow-50 dark:hover:bg-yellow-900/30': isPending,
+        'hover:bg-red-50 dark:hover:bg-red-900/30': isOffline,
+        'hover:bg-gray-100 dark:hover:bg-gray-700/50': !isOnline && !isPending && !isOffline
       }
     }
   }
-})
+}
 
 /**
  * 监控类型映射
@@ -468,9 +692,15 @@ const monitorTypeMap = {
 /**
  * 获取监控类型
  */
-const getMonitorType = computed(() => (monitor) => {
+const getMonitorType = (monitor) => {
   return monitorTypeMap[monitor.type] || monitorTypeMap.default
-})
+}
+
+const formatInterval = (interval) => {
+  if (!Number.isFinite(Number(interval))) return '—'
+  const minutes = Math.floor(Number(interval) / 60)
+  return minutes > 0 ? `${minutes}m` : `${Number(interval)}s`
+}
 
 /**
  * 错误消息映射
@@ -487,22 +717,22 @@ const ERROR_MESSAGES = {
 /**
  * 获取错误消息
  */
-const getErrorMessage = computed(() => (code) => {
+const getErrorMessage = (code) => {
   const errorCode = typeof code === 'object' ? code.code : code
   return ERROR_MESSAGES[errorCode] || ERROR_MESSAGES.default
-})
+}
 
 /**
  * 获取宕机统计信息
  */
-const getDowntimeStats = computed(() => (monitor) => {
+const getDowntimeStats = (monitor) => {
   const downtimeLogs = monitor.stats?.downtimeLogs || []
   const downtimeCount = downtimeLogs.length
   const totalDowntime = formatters.duration(monitor.stats?.totalDowntime)
   const validDays = getValidDays(monitor)
 
   if (validDays <= 0) return '暂无数据'
-  
+
   if (downtimeCount > 0 || monitor.status === STATUS.OFFLINE) {
     if (downtimeCount > 0) {
       return `最近${validDays}天 ${downtimeCount} 次故障，总计${totalDowntime}`
@@ -510,7 +740,8 @@ const getDowntimeStats = computed(() => (monitor) => {
     return '当前离线'
   }
   return `最近${validDays}天运行正常`
-})
+}
+
 
 /**
  * 响应式状态
@@ -519,16 +750,16 @@ const showDowntimeList = ref(null)
 const showResponseTimeModal = ref(false)
 const selectedMonitor = ref(null)
 const isMobile = ref(window.innerWidth < 768)
+const downtimeExpanded = ref({})
 
 /**
  * URL 处理函数
  */
-const openUrl = (url) => {
-  if (!url) return
-  const finalUrl = !url.startsWith('http://') && !url.startsWith('https://')
+const normalizeUrl = (url) => {
+  if (!url) return '#'
+  return !url.startsWith('http://') && !url.startsWith('https://')
     ? 'http://' + url
     : url
-  window.open(finalUrl, '_blank', 'noopener,noreferrer')
 }
 
 /**
@@ -548,23 +779,30 @@ const dateRange = computed(() => {
 /**
  * 宕机日志获取
  */
-const getDowntimeLogs = (monitor) => (monitor.stats?.downtimeLogs || []).slice(0, 15)
+const getDowntimeLogs = (monitor) => {
+  const logs = monitor.stats?.downtimeLogs || []
+  return downtimeExpanded.value[monitor.id] ? logs : logs.slice(0, 15)
+}
+
+const toggleDowntimeExpanded = (id) => {
+  downtimeExpanded.value[id] = !downtimeExpanded.value[id]
+}
 
 /**
  * 计算有效监控天数
  */
-const getValidDays = monitor => {
+const getValidDays = (monitor) => {
   if (!monitor.stats?.dailyUptimes) return 0
-  
+
   // 添加时间验证逻辑
-  const createTime = monitor.create_datetime * 1000
   const now = Date.now()
+  const createTime = monitor.create_datetime ? monitor.create_datetime * 1000 : now
   const effectiveCreateTime = createTime > now ? now : createTime
-  
+
   const daysSinceStart = Math.max(0, Math.floor(
     (new Date(effectiveCreateTime) - dateRange.value.startDate) / 86400000
   ))
-  
+
   return monitor.stats.dailyUptimes
     .slice(daysSinceStart)
     .filter(v => v != null && !isNaN(v))
@@ -576,6 +814,11 @@ const getValidDays = monitor => {
  */
 const getChartConfig = (monitor) => getStatusChartConfig(monitor, dateRange.value, isMobile.value)
 
+const hasResponseTimeData = (monitor) => {
+  const value = monitor?.stats?.avgResponseTime
+  return value != null && Number.isFinite(Number(value))
+}
+
 /**
  * 事件监听
  */
@@ -583,7 +826,7 @@ const closeOnClickOutside = (e) => {
   if (showDowntimeList.value) {
     const path = e.composedPath()
     const isClickInside = path.some(element => {
-      return element.classList?.contains('downtime-list') || 
+      return element.classList?.contains('downtime-list') ||
               element.dataset?.monitorId === showDowntimeList.value.toString()
     })
     if (!isClickInside) {
@@ -600,22 +843,36 @@ const toggleDowntimeList = (id) => {
  * 控制模态框挂载状态
  */
 const modalMounted = ref(false)
+let lastFocusedElement = null
 
 // 打开模态框
 const openResponseTimeModal = (monitor) => {
   selectedMonitor.value = monitor
+  lastFocusedElement = document.activeElement
   modalMounted.value = true
   showResponseTimeModal.value = true
+  document.body.style.overflow = 'hidden'
+  nextTick(() => {
+    document.getElementById('response-modal')?.focus()
+  })
 }
 
 // 关闭模态框
 const closeModal = () => {
   showResponseTimeModal.value = false
+  document.body.style.overflow = ''
+  lastFocusedElement?.focus?.()
 }
 
 // 在动画结束后卸载组件
 const onAfterLeave = () => {
   modalMounted.value = false
+}
+
+const handleKeydown = (e) => {
+  if (e.key === 'Escape' && showResponseTimeModal.value) {
+    closeModal()
+  }
 }
 
 /**
@@ -629,10 +886,13 @@ const updateMobileState = () => isMobile.value = window.innerWidth < 768
 onMounted(() => {
   document.addEventListener('click', closeOnClickOutside)
   window.addEventListener('resize', updateMobileState)
+  window.addEventListener('keydown', handleKeydown)
 })
 
 onUnmounted(() => {
   document.removeEventListener('click', closeOnClickOutside)
   window.removeEventListener('resize', updateMobileState)
+  window.removeEventListener('keydown', handleKeydown)
+  document.body.style.overflow = ''
 })
 </script>

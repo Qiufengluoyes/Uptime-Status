@@ -24,10 +24,9 @@ dist-ssr
 *.sw?
 
 # 环境文件
-.env.local
-.env.*.local
-
-# 保留生产环境配置
+.env
+.env.*
+!.env.example
 !.env.production
 
 package-lock.json

@@ -9,80 +9,90 @@
       leave-from-class="opacity-100 translate-y-0"
       leave-to-class="opacity-0 translate-y-4"
     >
-      <button 
+      <button
         v-show="showBackToTop"
+        type="button"
+        aria-label="返回顶部"
+        title="返回顶部"
         @click="scrollToTop"
-        class="fixed bottom-20 right-6 p-3 rounded-full shadow-lg 
-          bg-white dark:bg-gray-800 
+        class="fixed bottom-20 right-6 p-3 rounded-full shadow-lg
+          bg-white dark:bg-gray-800
           text-gray-600 dark:text-gray-300
           hover:bg-gray-50 dark:hover:bg-gray-700
           border border-gray-200 dark:border-gray-700
           transition-all duration-200 z-50
           group"
       >
-        <Icon 
-          icon="carbon:arrow-up" 
-          class="w-6 h-6 transition-transform duration-200 
+        <Icon
+          icon="carbon:arrow-up"
+          class="w-6 h-6 transition-transform duration-200
             group-hover:-translate-y-0.5
             text-gray-600 dark:text-gray-300
-            group-hover:text-emerald-500 dark:group-hover:text-emerald-400" 
+            group-hover:text-emerald-500 dark:group-hover:text-emerald-400"
+          aria-hidden="true"
         />
       </button>
     </Transition>
 
     <div class="flex flex-col items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
       <div class="flex items-center gap-6">
-        <a 
+        <a
           :href="pkg.repository.url"
           target="_blank"
           rel="noopener noreferrer"
+          aria-label="GitHub 仓库"
+          title="GitHub 仓库"
           class="inline-flex items-center justify-center p-1.5 rounded-full transition-colors duration-200
             text-gray-400 hover:text-gray-600 hover:bg-gray-200
             dark:text-gray-500 dark:hover:text-gray-400 dark:hover:bg-gray-700
             box-content"
         >
-          <Icon icon="ri:github-line" class="w-5 h-5" />
+          <Icon icon="ri:github-line" class="w-5 h-5" aria-hidden="true" />
         </a>
-        <a 
+        <a
           :href="pkg.url"
           target="_blank"
           rel="noopener noreferrer"
+          aria-label="个人主页"
+          title="个人主页"
           class="inline-flex items-center justify-center p-1.5 rounded-full transition-colors duration-200
             text-gray-400 hover:text-gray-600 hover:bg-gray-200
             dark:text-gray-500 dark:hover:text-gray-400 dark:hover:bg-gray-700
             box-content"
         >
-          <Icon icon="carbon:home" class="w-5 h-5" />
+          <Icon icon="carbon:home" class="w-5 h-5" aria-hidden="true" />
         </a>
-        <a 
+        <a
           :href="`mailto:${pkg.email}`"
+          aria-label="发送邮件"
+          title="发送邮件"
           class="inline-flex items-center justify-center p-1.5 rounded-full transition-colors duration-200
             text-gray-400 hover:text-gray-600 hover:bg-gray-200
             dark:text-gray-500 dark:hover:text-gray-400 dark:hover:bg-gray-700
             box-content"
         >
-          <Icon icon="carbon:email" class="w-5 h-5" />
+          <Icon icon="carbon:email" class="w-5 h-5" aria-hidden="true" />
         </a>
       </div>
       <div class="flex flex-col items-center gap-1">
         <div>
-          <a 
-            :href="pkg.repository.url" 
-            target="_blank" 
+          <a
+            :href="pkg.repository.url"
+            target="_blank"
             rel="noopener noreferrer"
             class="font-semibold hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors"
           >Uptime-Status</a> Version {{ pkg.version }}
         </div>
         <div>
-          基于 <a 
-            href="https://uptimerobot.com" 
-            target="_blank" 
+          基于 <a
+            href="https://uptimerobot.com"
+            target="_blank"
             rel="noopener noreferrer"
             class="font-semibold hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors"
           >UptimeRobot</a> 接口 | 检测频率 5 分钟
         </div>
         <div>
-          Copyright © 2024 - {{ new Date().getFullYear() }} <a 
+          Copyright © 2024 - {{ new Date().getFullYear() }} <a
             :href="pkg.repository.url"
             target="_blank"
             rel="noopener noreferrer"
@@ -131,4 +141,4 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('scroll', handleScroll)
 })
-</script> 
+</script>

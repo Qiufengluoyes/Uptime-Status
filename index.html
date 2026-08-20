@@ -2,9 +2,10 @@
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f9fafb" />
     <title>%VITE_APP_TITLE% - 站点监测</title>
     <meta name="description" content="简洁的状态监控" />
     <meta name="keywords" content="状态监控, 站点监测, 监控, 状态, 站点" />
@@ -12,22 +13,22 @@
     <meta name="copyright" content="枫落丰源" />
     <meta name="robots" content="index, follow" />
     <meta name="googlebot" content="index, follow" />
+    <!-- 首屏前应用主题，避免闪烁 -->
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('theme-mode') || localStorage.getItem('theme') || 'system';
+          var dark = stored === 'dark' ||
+            (stored !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          if (dark) document.documentElement.classList.add('dark');
+          document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+        } catch (e) {}
+      })();
+    </script>
     <!-- 统计 -->
     <script defer src="https://um.ruom.top/script.js" data-website-id="ef582935-916b-40a8-888c-918415a49f20"></script>
     <!-- 字体 -->
     <link rel="stylesheet" href="https://s1.hdslb.com/bfs/static/jinkela/long/font/regular.css">
-    <script>
-      if (false || (!!window.MSInputMethodContext && !!document.documentMode))
-        window.location.href =
-          'https://support.dmeng.net/upgrade-your-browser.html?referrer=' +
-          encodeURIComponent(window.location.href);
-    </script>
-    <!-- 禁用右键 -->
-    <script>
-      document.oncontextmenu = function () {
-        return false;
-      };
-    </script>
   </head>
   <body>
     <div id="app"></div>
