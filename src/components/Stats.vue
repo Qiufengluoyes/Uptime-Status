@@ -22,9 +22,8 @@
     <div
       v-for="(item, index) in overviewItems"
       :key="index"
-      class="card-base animated-border animate-fade p-4 sm:p-5"
+      class="card-base animate-fade p-4 sm:p-5"
       :class="[item.containerClass]"
-      @mouseenter="$event.currentTarget.classList.add('hovered')"
     >
       <div class="flex items-center justify-between gap-3 relative">
         <div class="min-w-0">
@@ -110,7 +109,7 @@ const overviewItems = computed(() => [
     desc: '全部网站',
     icon: 'bi:check-circle',
     iconColor: 'text-emerald-500',
-    containerClass: 'after:border-emerald-500/50 dark:after:border-emerald-400/50'
+    containerClass: 'hover:border-emerald-500/50 dark:hover:border-emerald-400/50'
   },
   {
     label: '正常网站',
@@ -118,7 +117,7 @@ const overviewItems = computed(() => [
     desc: '访问正常',
     icon: 'bi:check-circle-fill',
     iconColor: 'text-green-500',
-    containerClass: 'after:border-green-500/50 dark:after:border-green-400/50'
+    containerClass: 'hover:border-green-500/50 dark:hover:border-green-400/50'
   },
   {
     label: '异常网站',
@@ -126,7 +125,7 @@ const overviewItems = computed(() => [
     desc: '离线或未知状态',
     icon: 'bi:x-circle-fill',
     iconColor: 'text-red-500',
-    containerClass: 'after:border-red-500/50 dark:after:border-red-400/50'
+    containerClass: 'hover:border-red-500/50 dark:hover:border-red-400/50'
   },
   {
     label: '暂停/准备中',
@@ -134,7 +133,7 @@ const overviewItems = computed(() => [
     desc: '未在监控',
     icon: 'bi:pause-circle-fill',
     iconColor: 'text-yellow-500',
-    containerClass: 'after:border-yellow-500/50 dark:after:border-yellow-400/50'
+    containerClass: 'hover:border-yellow-500/50 dark:hover:border-yellow-400/50'
   },
   {
     label: '平均响应',
@@ -143,7 +142,7 @@ const overviewItems = computed(() => [
     desc: '在线站点网络延迟',
     icon: 'bi:clock',
     iconColor: 'text-blue-500',
-    containerClass: 'after:border-blue-500/50 dark:after:border-blue-400/50'
+    containerClass: 'hover:border-blue-500/50 dark:hover:border-blue-400/50'
   }
 ])
 

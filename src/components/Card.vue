@@ -148,10 +148,9 @@
     <div v-else class="grid gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
       <div v-for="(monitor, index) in visibleMonitors"
            :key="monitor.id"
-           class="card-base animated-border p-6 rounded-2xl backdrop-blur-sm animate-fade"
+           class="card-base p-6 rounded-2xl backdrop-blur-sm animate-fade"
            :class="getCardBorderClass(monitor.status)"
            :style="{ animationDelay: `${Math.min(index, 12) * 60}ms` }"
-           @mouseenter="$event.currentTarget.classList.add('hovered')"
       >
         <!-- 卡片头部：标题和状态指示器 -->
         <div class="flex items-start sm:items-center justify-between gap-3 sm:gap-4 mb-6">
@@ -586,13 +585,13 @@ const getStatusConfig = (status) => STATUS_CONFIG[status] || FALLBACK_STATUS
  * 卡片边框颜色静态映射（避免动态拼接 Tailwind 类）
  */
 const CARD_BORDER_CLASSES = {
-  2: 'after:border-green-500/50 dark:after:border-green-400/50',
-  0: 'after:border-yellow-500/50 dark:after:border-yellow-400/50',
-  1: 'after:border-yellow-500/50 dark:after:border-yellow-400/50',
-  9: 'after:border-red-500/50 dark:after:border-red-400/50'
+  2: 'hover:border-green-500/50 dark:hover:border-green-400/50',
+  0: 'hover:border-yellow-500/50 dark:hover:border-yellow-400/50',
+  1: 'hover:border-yellow-500/50 dark:hover:border-yellow-400/50',
+  9: 'hover:border-red-500/50 dark:hover:border-red-400/50'
 }
 
-const getCardBorderClass = (status) => CARD_BORDER_CLASSES[status] || 'after:border-gray-500/50 dark:after:border-gray-400/50'
+const getCardBorderClass = (status) => CARD_BORDER_CLASSES[status] || 'hover:border-gray-500/50 dark:hover:border-gray-400/50'
 
 /**
  * 排序后的监控列表
